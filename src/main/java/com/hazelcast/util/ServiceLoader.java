@@ -77,11 +77,6 @@ public final class ServiceLoader {
         for (URLDefinition urlDefinition : factoryUrls) {
             serviceDefinitions.addAll(parse(urlDefinition));
         }
-        if (serviceDefinitions.isEmpty()) {
-            Logger.getLogger(ServiceLoader.class).warning(
-                    "Service loader could not load 'META-INF/services/" + factoryId + "' It may be empty or does not exist.");
-        }
-
         return new Iterator<T>() {
             final Iterator<ServiceDefinition> iterator = serviceDefinitions.iterator();
 
