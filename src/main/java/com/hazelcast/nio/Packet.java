@@ -74,7 +74,6 @@ public final class Packet {
         this.partitionId = partitionId;
     }
 
-
     public void setHeader(int bit) {
         header |= 1 << bit;
     }

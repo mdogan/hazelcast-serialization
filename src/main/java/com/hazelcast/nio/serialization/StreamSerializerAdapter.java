@@ -49,7 +49,11 @@ class StreamSerializerAdapter implements SerializerAdapter {
         final BufferObjectDataOutput out = service.pop();
         try {
             serializer.write(out, object);
-            return new DefaultData(serializer.getTypeId(), out.toByteArray(), partitionHash);
+            byte[] header = null;
+            if (out instanceof PortableDataOutput) {
+                header = ((PortableDataOutput) out).getPortableHeader();
+            }
+            return new DefaultData(serializer.getTypeId(), out.toByteArray(), partitionHash, header);
         } finally {
             service.push(out);
         }

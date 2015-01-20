@@ -16,17 +16,12 @@
 
 package com.hazelcast.nio.serialization;
 
-interface MutableData extends Data {
+import com.hazelcast.nio.BufferObjectDataInput;
 
-    byte[] getData();
+import java.nio.ByteBuffer;
 
-    void setData(byte[] data);
+interface PortableDataInput extends BufferObjectDataInput {
 
-    void setType(int type);
+    ByteBuffer getHeaderBuffer();
 
-    void setPartitionHash(int partitionHash);
-
-    byte[] getHeader();
-
-    void setHeader(byte[] header);
 }

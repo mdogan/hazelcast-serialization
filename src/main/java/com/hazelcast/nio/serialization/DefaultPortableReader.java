@@ -16,7 +16,6 @@
 
 package com.hazelcast.nio.serialization;
 
-import com.hazelcast.nio.Bits;
 import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.ObjectDataInput;
 
@@ -29,7 +28,7 @@ public class DefaultPortableReader implements PortableReader {
     private static final Pattern NESTED_FIELD_PATTERN = Pattern.compile("\\.");
 
     protected final ClassDefinition cd;
-    protected final PortableSerializer serializer;
+    private final PortableSerializer serializer;
     private final BufferObjectDataInput in;
     private final int finalPosition;
     private final int offset;
@@ -39,17 +38,11 @@ public class DefaultPortableReader implements PortableReader {
         this.in = in;
         this.serializer = serializer;
         this.cd = cd;
-        int fieldCount;
         try {
             // final position after portable is read
             finalPosition = in.readInt();
-            // field count
-            fieldCount = in.readInt();
         } catch (IOException e) {
             throw new HazelcastSerializationException(e);
-        }
-        if (fieldCount != cd.getFieldCount()) {
-            throw new IllegalStateException("Field count[" + fieldCount + "] in stream does not match " + cd);
         }
         this.offset = in.position();
     }
@@ -246,7 +239,7 @@ public class DefaultPortableReader implements PortableReader {
             if (len > 0) {
                 final int offset = in.position();
                 for (int i = 0; i < len; i++) {
-                    final int start = in.readInt(offset + i * Bits.INT_SIZE_IN_BYTES);
+                    final int start = in.readInt(offset + i * 4);
                     in.position(start);
                     portables[i] = serializer.readAndInitialize(in);
                 }
@@ -306,21 +299,19 @@ public class DefaultPortableReader implements PortableReader {
     }
 
     private int readPosition(FieldDefinition fd) throws IOException {
-        int pos = in.readInt(offset + fd.getIndex() * Bits.INT_SIZE_IN_BYTES);
-        short len = in.readShort(pos);
-        return pos + Bits.SHORT_SIZE_IN_BYTES + len + 1; // name + len + type
+        return in.readInt(offset + fd.getIndex() * 4);
     }
 
     public ObjectDataInput getRawDataInput() throws IOException {
         if (!raw) {
-            int pos = in.readInt(offset + cd.getFieldCount() * Bits.INT_SIZE_IN_BYTES);
+            int pos = in.readInt(offset + cd.getFieldCount() * 4);
             in.position(pos);
         }
         raw = true;
         return in;
     }
 
-    final void end() throws IOException {
+    void end() throws IOException {
         in.position(finalPosition);
     }
 

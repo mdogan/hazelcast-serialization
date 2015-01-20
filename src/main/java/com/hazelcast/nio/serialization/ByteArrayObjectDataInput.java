@@ -23,6 +23,7 @@ import com.hazelcast.nio.UTFEncoderDecoder;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static com.hazelcast.nio.Bits.CHAR_SIZE_IN_BYTES;
@@ -30,7 +31,11 @@ import static com.hazelcast.nio.Bits.INT_SIZE_IN_BYTES;
 import static com.hazelcast.nio.Bits.LONG_SIZE_IN_BYTES;
 import static com.hazelcast.nio.Bits.SHORT_SIZE_IN_BYTES;
 
-class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataInput{
+class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataInput, PortableDataInput {
+
+    private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
+
+    ByteBuffer header;
 
     byte[] data;
 
@@ -47,15 +52,20 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
     private final boolean bigEndian;
 
     ByteArrayObjectDataInput(Data data, SerializationService service, ByteOrder byteOrder) {
-        this(data.getData(), service, byteOrder);
+        this(data.getData(), data.getHeader(), service, byteOrder);
     }
 
     ByteArrayObjectDataInput(byte[] data, SerializationService service, ByteOrder byteOrder) {
+        this(data, null, service, byteOrder);
+    }
+
+    private ByteArrayObjectDataInput(byte[] data, byte[] header, SerializationService service, ByteOrder byteOrder) {
         super();
         this.data = data;
         this.size = data != null ? data.length : 0;
         this.service = service;
         bigEndian = byteOrder == ByteOrder.BIG_ENDIAN;
+        this.header = header != null ? ByteBuffer.wrap(header).asReadOnlyBuffer().order(byteOrder) : null;
     }
 
     public int read() throws IOException {
@@ -383,7 +393,7 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
      * @see java.io.FilterInputStream#in
      */
     public int readUnsignedByte() throws IOException {
-        return readByte() & 0xFF;
+        return readByte();
     }
 
     /**
@@ -400,7 +410,7 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
      * @see java.io.FilterInputStream#in
      */
     public int readUnsignedShort() throws IOException {
-        return readShort() & 0xffff;
+        return readShort();
     }
 
     /**
@@ -506,6 +516,7 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
 
     @Override
     public final void close() {
+        header = null;
         data = null;
         utfBuffer = null;
     }
@@ -517,6 +528,11 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
 
     public ByteOrder getByteOrder() {
         return bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+    }
+
+    @Override
+    public ByteBuffer getHeaderBuffer() {
+        return header != null ? header : EMPTY_BUFFER;
     }
 
     @Override
