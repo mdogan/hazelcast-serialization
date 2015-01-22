@@ -76,12 +76,16 @@ final class PortableSerializer implements StreamSerializer<Portable> {
 
         int factoryId = in.readInt();
         int classId = in.readInt();
+        return read((BufferObjectDataInput) in, factoryId, classId);
+    }
+
+    private Portable read(BufferObjectDataInput in, int factoryId, int classId) throws IOException {
         int version = in.readInt();
 
         Portable portable = createNewPortableInstance(factoryId, classId);
         int portableVersion = findPortableVersion(factoryId, classId, portable);
 
-        DefaultPortableReader reader = createReader((BufferObjectDataInput) in, factoryId, classId,
+        DefaultPortableReader reader = createReader(in, factoryId, classId,
                 version, portableVersion);
         portable.readPortable(reader);
         reader.end();
@@ -111,8 +115,8 @@ final class PortableSerializer implements StreamSerializer<Portable> {
         return portable;
     }
 
-    Portable readAndInitialize(BufferObjectDataInput in) throws IOException {
-        Portable p = read(in);
+    Portable readAndInitialize(BufferObjectDataInput in, int factoryId, int classId) throws IOException {
+        Portable p = read(in, factoryId, classId);
         final ManagedContext managedContext = context.getManagedContext();
         return managedContext != null ? (Portable) managedContext.initialize(p) : p;
     }

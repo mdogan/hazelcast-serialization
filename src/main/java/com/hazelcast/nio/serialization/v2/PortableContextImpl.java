@@ -134,6 +134,21 @@ final class PortableContextImpl implements PortableContext {
                     int fieldVersion = in.readInt();
                     readClassDefinition(in, fieldFactoryId, fieldClassId, fieldVersion);
                 }
+            } else if (type == FieldType.PORTABLE_ARRAY) {
+                int k = in.readInt();
+                if (k > 0) {
+                    fieldFactoryId = in.readInt();
+                    fieldClassId = in.readInt();
+
+                    int p = in.readInt();
+                    in.position(p);
+
+                    int fieldVersion = in.readInt();
+                    readClassDefinition(in, fieldFactoryId, fieldClassId, fieldVersion);
+                } else {
+                    register = false;
+                }
+
             }
             builder.addField(new FieldDefinitionImpl(i, name, type, fieldFactoryId, fieldClassId));
         }
@@ -269,7 +284,7 @@ final class PortableContextImpl implements PortableContext {
 
     @Override
     public ClassDefinition[] getClassDefinitions(Data data) {
-        throw new UnsupportedOperationException();
+        return new ClassDefinition[0];
     }
 
     @Override

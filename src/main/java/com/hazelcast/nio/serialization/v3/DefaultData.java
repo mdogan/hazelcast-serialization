@@ -191,7 +191,7 @@ public final class DefaultData implements MutableData {
 
     @Override
     public int headerSize() {
-        throw new UnsupportedOperationException();
+        return -1;
     }
 
     @Override

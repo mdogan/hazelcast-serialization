@@ -136,6 +136,9 @@ public class DefaultPortableWriter implements PortableWriter {
     public void writeNullPortable(String fieldName, int factoryId, int classId) throws IOException {
         setPosition(fieldName, FieldType.PORTABLE);
         out.writeBoolean(true);
+
+        out.writeInt(factoryId);
+        out.writeInt(classId);
     }
 
     public void writeByteArray(String fieldName, byte[] values) throws IOException {

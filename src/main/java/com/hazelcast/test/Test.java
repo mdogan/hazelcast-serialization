@@ -1,10 +1,13 @@
 package com.hazelcast.test;
 
+import com.hazelcast.nio.serialization.ClassDefinition;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.Portable;
 import com.hazelcast.nio.serialization.PortableFactory;
 import com.hazelcast.nio.serialization.SerializationService;
-import com.hazelcast.nio.serialization.v3.V3SerializationServiceBuilder;
+import com.hazelcast.nio.serialization.v1.BinaryClassDefinition;
+import com.hazelcast.nio.serialization.v1.V1SerializationServiceBuilder;
+import com.hazelcast.nio.serialization.v2.V2SerializationServiceBuilder;
 
 public class Test {
 
@@ -13,28 +16,42 @@ public class Test {
     public static void main(String[] args) throws Exception {
         PortableFactory portableFactory = new TestPortableFactory();
 
-        SerializationService ss = new V3SerializationServiceBuilder()
+        SerializationService ss1 = new V1SerializationServiceBuilder()
                 .addPortableFactory(FACTORY_ID, portableFactory).build();
 
-//        Portable portable = new PortablePerson(123456, System.currentTimeMillis(), "some name surname",
-//                new PortableAddress("some street name", 987));
+        SerializationService ss2 = new V2SerializationServiceBuilder()
+                .addPortableFactory(FACTORY_ID, portableFactory).build();
 
-        Portable portable = new ComplexPortable(new Object());
+        Portable portable = new PortablePerson(123456, System.currentTimeMillis(), "some name surname",
+                new PortableAddress("some street name", 987));
 
-                Data data = ss.toData(portable);
-        System.out.println(ss.toObject(data));
+        print(ss1, ss2, portable);
+        System.out.println();
+        print(ss1, ss2, new ComplexPortable(new Object()));
 
-        System.out.println(ss.getPortableContext().readField(data, "name"));
-        System.out.println(ss.getPortableContext().readField(data, "age"));
-//        System.out.println(ss.getPortableContext().readField(data, "namex"));
 
-        //        System.out.println(PortableExtractor.extractValue(ss, data, "age"));
-//        System.out.println(PortableExtractor.extractValue(ss, data, "name"));
-//        System.out.println(PortableExtractor.extractValue(ss, data, "namex"));
 
 //        h: 24, d: 120
 //        291
 
+    }
+
+    private static void print(SerializationService ss1, SerializationService ss2, Portable portable) {
+
+        Data data1 = ss1.toData(portable);
+        System.out.println("h: " + data1.headerSize() + ", d: " + data1.dataSize() + ", cd: " + cdSize(ss1, data1));
+
+        Data data2 = ss2.toData(portable);
+        System.out.println("h: " + data2.headerSize() + ", d: " + data2.dataSize() + ", cd: " + cdSize(ss2, data2));
+    }
+
+    private static int cdSize(SerializationService ss1, Data data1) {
+        ClassDefinition[] classDefinitions = ss1.getPortableContext().getClassDefinitions(data1);
+        int k = 0;
+        for (ClassDefinition classDefinition : classDefinitions) {
+            k += ((BinaryClassDefinition) classDefinition).getBinary().length;
+        }
+        return k;
     }
 
 

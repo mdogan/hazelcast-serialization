@@ -209,20 +209,27 @@ public class DefaultPortableReader implements PortableReader {
     }
 
     public Portable readPortable(String fieldName) throws IOException {
-        FieldDefinition fd = cd.getField(fieldName);
-        if (fd == null) {
-            throw throwUnknownFieldException(fieldName);
-        }
-        if (fd.getType() != FieldType.PORTABLE) {
-            throw new HazelcastSerializationException("Not a Portable field: " + fieldName);
-        }
         final int currentPos = in.position();
         try {
+            FieldDefinition fd = cd.getField(fieldName);
+            if (fd == null) {
+                throw throwUnknownFieldException(fieldName);
+            }
+            if (fd.getType() != FieldType.PORTABLE) {
+                throw new HazelcastSerializationException("Not a Portable field: " + fieldName);
+            }
+
             int pos = readPosition(fd);
             in.position(pos);
-            final boolean isNull = in.readBoolean();
+
+            boolean isNull = in.readBoolean();
+            int factoryId = in.readInt();
+            int classId = in.readInt();
+
+            checkFactoryAndClass(fd, factoryId, classId);
+
             if (!isNull) {
-                return serializer.readAndInitialize(in);
+                return serializer.readAndInitialize(in, factoryId, classId);
             }
             return null;
         } finally {
@@ -230,37 +237,55 @@ public class DefaultPortableReader implements PortableReader {
         }
     }
 
-    private HazelcastSerializationException throwUnknownFieldException(String fieldName) {
-        return new HazelcastSerializationException("Unknown field name: '" + fieldName
-                + "' for ClassDefinition {id: " + cd.getClassId() + ", version: " + cd.getVersion() + "}");
-    }
-
     public Portable[] readPortableArray(String fieldName) throws IOException {
-        FieldDefinition fd = cd.getField(fieldName);
-        if (fd == null) {
-            throw throwUnknownFieldException(fieldName);
-        }
-        if (fd.getType() != FieldType.PORTABLE_ARRAY) {
-            throw new HazelcastSerializationException("Not a Portable array field: " + fieldName);
-        }
         final int currentPos = in.position();
         try {
+            FieldDefinition fd = cd.getField(fieldName);
+            if (fd == null) {
+                throw throwUnknownFieldException(fieldName);
+            }
+            if (fd.getType() != FieldType.PORTABLE_ARRAY) {
+                throw new HazelcastSerializationException("Not a Portable array field: " + fieldName);
+            }
+
             int pos = readPosition(fd);
             in.position(pos);
-            final int len = in.readInt();
+
+            int len = in.readInt();
+            int factoryId = in.readInt();
+            int classId = in.readInt();
+
+            checkFactoryAndClass(fd, factoryId, classId);
+
             final Portable[] portables = new Portable[len];
             if (len > 0) {
                 final int offset = in.position();
                 for (int i = 0; i < len; i++) {
                     final int start = in.readInt(offset + i * Bits.INT_SIZE_IN_BYTES);
                     in.position(start);
-                    portables[i] = serializer.readAndInitialize(in);
+                    portables[i] = serializer.readAndInitialize(in, factoryId, classId);
                 }
             }
             return portables;
         } finally {
             in.position(currentPos);
         }
+    }
+
+    private void checkFactoryAndClass(FieldDefinition fd, int factoryId, int classId) {
+        if (factoryId != fd.getFactoryId()) {
+            throw new IllegalArgumentException("Invalid factoryId! Expected: "
+                    + fd.getFactoryId() + ", Current: " + factoryId);
+        }
+        if (classId != fd.getClassId()) {
+            throw new IllegalArgumentException("Invalid classId! Expected: "
+                    + fd.getClassId() + ", Current: " + classId);
+        }
+    }
+
+    private HazelcastSerializationException throwUnknownFieldException(String fieldName) {
+        return new HazelcastSerializationException("Unknown field name: '" + fieldName
+                + "' for ClassDefinition {id: " + cd.getClassId() + ", version: " + cd.getVersion() + "}");
     }
 
     private int readPosition(String fieldName, FieldType type) throws IOException {
@@ -314,7 +339,8 @@ public class DefaultPortableReader implements PortableReader {
     private int readPosition(FieldDefinition fd) throws IOException {
         int pos = in.readInt(offset + fd.getIndex() * Bits.INT_SIZE_IN_BYTES);
         short len = in.readShort(pos);
-        return pos + Bits.SHORT_SIZE_IN_BYTES + len + 1; // name + len + type
+        // name + len + type
+        return pos + Bits.SHORT_SIZE_IN_BYTES + len + 1;
     }
 
     public ObjectDataInput getRawDataInput() throws IOException {
