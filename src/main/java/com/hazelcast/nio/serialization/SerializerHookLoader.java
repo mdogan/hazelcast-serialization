@@ -34,7 +34,7 @@ import java.util.Iterator;
  * the defined SerializerHooks.<br/>
  * This system is meant to be internal code and is subject to change at any time.
  */
-final class SerializerHookLoader {
+public final class SerializerHookLoader {
 
     private static final String FACTORY_ID = "com.hazelcast.SerializerHook";
 
@@ -42,7 +42,7 @@ final class SerializerHookLoader {
     private final Collection<SerializerConfig> serializerConfigs;
     private final ClassLoader classLoader;
 
-    SerializerHookLoader(SerializationConfig serializationConfig, ClassLoader classLoader) {
+    public SerializerHookLoader(SerializationConfig serializationConfig, ClassLoader classLoader) {
         this.serializerConfigs = serializationConfig != null ? serializationConfig.getSerializerConfigs() : null;
         this.classLoader = classLoader;
         load();
@@ -85,7 +85,7 @@ final class SerializerHookLoader {
         }
     }
 
-    Map<Class, Object> getSerializers() {
+    public Map<Class, Object> getSerializers() {
         return serializers;
     }
 

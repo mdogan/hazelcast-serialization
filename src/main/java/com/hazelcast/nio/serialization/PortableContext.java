@@ -53,4 +53,6 @@ public interface PortableContext {
     ManagedContext getManagedContext();
 
     ByteOrder getByteOrder();
+
+    Object readField(Data data, String fieldName) throws NoSuchFieldException;
 }

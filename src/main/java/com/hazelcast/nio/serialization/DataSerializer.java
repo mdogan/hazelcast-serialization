@@ -36,13 +36,14 @@ import static com.hazelcast.nio.serialization.SerializationConstants.CONSTANT_TY
  * has a dependency to {@link com.hazelcast.nio.IOUtil#extractOperationCallId(Data, SerializationService)}.
  * If the way the DataSerializer serializes values is changed the extract method needs to be changed too!
  */
-final class DataSerializer implements StreamSerializer<DataSerializable> {
+public final class DataSerializer implements StreamSerializer<DataSerializable> {
 
     private static final String FACTORY_ID = "com.hazelcast.DataSerializerHook";
 
     private final Map<Integer, DataSerializableFactory> factories = new HashMap<Integer, DataSerializableFactory>();
 
-    DataSerializer(Map<Integer, ? extends DataSerializableFactory> dataSerializableFactories, ClassLoader classLoader) {
+    public DataSerializer(Map<Integer, ? extends DataSerializableFactory> dataSerializableFactories,
+            ClassLoader classLoader) {
         try {
             final Iterator<DataSerializerHook> hooks = ServiceLoader.iterator(DataSerializerHook.class, FACTORY_ID, classLoader);
             while (hooks.hasNext()) {

@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.HashSet;
 
-final class PortableHookLoader {
+public final class PortableHookLoader {
 
     private static final String FACTORY_ID = "com.hazelcast.PortableHook";
 
@@ -35,7 +35,7 @@ final class PortableHookLoader {
     private final Collection<ClassDefinition> definitions = new HashSet<ClassDefinition>();
     private final ClassLoader classLoader;
 
-    PortableHookLoader(Map<Integer, ? extends PortableFactory> configuredFactories, ClassLoader classLoader) {
+    public PortableHookLoader(Map<Integer, ? extends PortableFactory> configuredFactories, ClassLoader classLoader) {
         this.configuredFactories = configuredFactories;
         this.classLoader = classLoader;
         load();
@@ -66,11 +66,11 @@ final class PortableHookLoader {
         }
     }
 
-    Map<Integer, PortableFactory> getFactories() {
+    public Map<Integer, PortableFactory> getFactories() {
         return factories;
     }
 
-    Collection<ClassDefinition> getDefinitions() {
+    public Collection<ClassDefinition> getDefinitions() {
         return definitions;
     }
 

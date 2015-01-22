@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package com.hazelcast.nio.serialization;
+package com.hazelcast.nio.serialization.v1;
 
-public interface MutableData extends Data {
+import com.hazelcast.nio.BufferObjectDataInput;
 
-    byte[] getData();
+import java.nio.ByteBuffer;
 
-    void setData(byte[] data);
+public interface PortableDataInput extends BufferObjectDataInput {
 
-    void setType(int type);
+    ByteBuffer getHeaderBuffer();
 
-    void setPartitionHash(int partitionHash);
-
-    void setHeader(byte[] header);
 }

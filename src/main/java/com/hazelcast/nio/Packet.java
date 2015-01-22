@@ -17,7 +17,7 @@
 package com.hazelcast.nio;
 
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.nio.serialization.DefaultData;
+import com.hazelcast.nio.serialization.v1.DefaultData;
 import com.hazelcast.nio.serialization.PortableContext;
 
 import java.nio.ByteBuffer;
